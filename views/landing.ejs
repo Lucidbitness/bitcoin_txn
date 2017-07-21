@@ -1,60 +1,17 @@
-<!DOCTYPE html>
-<html>
-    <head>
-        <title>BitcoinTxn</title>
-        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
-        <link rel="stylesheet" href="/stylesheets/landing.css">
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/modernizr/2.8.3/modernizr.min.js" type="text/javascript" async></script>
-        <script src="https://code.jquery.com/jquery-3.2.1.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous"></script>
 
-        <script type="text/javascript" src="//cdn.jsdelivr.net/jquery/1/jquery.min.js"></script>
-        <script type="text/javascript" src="//cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
-        <link rel="stylesheet" type="text/css" href="//cdn.jsdelivr.net/bootstrap/3/css/bootstrap.css" />
-
-        <script type="text/javascript" src="//cdn.jsdelivr.net/bootstrap.daterangepicker/2/daterangepicker.js"></script>
-        <link rel="stylesheet" type="text/css" href="//cdn.jsdelivr.net/bootstrap.daterangepicker/2/daterangepicker.css" />
-    </head>
-    <body>
-
+<% include partials/header.ejs %>
     <div id="landing-header">
-        <h1>Welcome to Bitcoin Transaction Getter</h1>
+        <h1>Bitcoin Transaction Report</h1>
         <br>
         <br>
 
-        <form action="/results" method="GET">
-            <input type="text" name="address" placeholder="Enter Bitcoin Address" autocomplete="on">
-            <input type="text" name="blockStart" value="" placeholder="Block Start" autocomplete="on">
-            <input type="text" name="blockEnd" value="" placeholder="Block End" autocomplete="on">
-            <input type="text" name="datefilter" value="" placeholder="Enter Date Range" />
- 
-        <script type="text/javascript">
-        $(function() {
-            $('input[name="datefilter"]').daterangepicker({
-                autoUpdateInput: false,
-                locale: {
-                cancelLabel: 'Clear'
-                }               
-            });
-
-            $('input[name="datefilter"]').on('apply.daterangepicker', function(ev, picker) {
-                var dateStart = picker.startDate.format('YYYY-MM-DD');
-                $(this).val(picker.startDate.format('YYYY-MM-DD') + '-' + picker.endDate.format('YYYY-MM-DD'));
-                console.log(dateStart);
-
-            });
-
-            $('input[name="datefilter"]').on('cancel.daterangepicker', function(ev, picker) {
-                $(this).val('');
-            });
-
-        });
-        </script>
-
-       
-            <button formaction="/results" type="submit" class="btn btn-success">Get Transactions</button>
+        <form action="/blocks" method="GET">
+            
+            <input type="text" name="datefilter" value="" placeholder="Enter Date Range" />  
+            <button formaction="/blocks" type="submit" class="btn btn-success">Get Block Numbers</button>
         </form>
     </div>
-  
+  <script type="text/javascript" src="functions.js"></script>
 
 
-<% include partials/footer %>
+<% include partials/footer.ejs %>

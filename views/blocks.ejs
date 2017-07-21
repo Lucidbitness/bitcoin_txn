@@ -1,0 +1,18 @@
+<% include partials/header %>
+
+
+<div id="landing-header">
+<h1>Blocks Page</h1>
+<br>
+<br>
+	<form action="/results" method="GET">
+		<input type="text" name="bheight" value="<%= block.todaysHeight%>" placeholder="" autocomplete="on">
+		<input type="text" name="address" value="1DEP8i3QJCsomS4BSMY2RpU1upv62aGvhD" autocomplete="on">
+		<input type="text" name="bStart" value="<%= block.blockStart %>" placeholder="Block Start" autocomplete="on">
+		<input type="text" name="bEnd" value="<%= block.blockEnd %>" placeholder="Block End" autocomplete="on">
+		<button formaction="/results" type="submit" class="btn btn-success">Get Transactions</button>
+	</form>
+	<a href="/" class="btn btn-success">Back to Query page</a>
+</div>
+
+<% include partials/footer %>
