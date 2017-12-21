@@ -7,8 +7,12 @@ var bodyParser     = require("body-parser"),
 	dateMath       = require('date-arithmetic'),
 	google         = require('googleapis'),
 	googleAuth     = require('google-auth-library'),
+	readline       = require('linebyline'),
 	sheets         = google.sheets('v4'),
-	app            = express();
+	app            = express(),
+	fs             = require('fs');
+
+
 
 	app.set("view engine", "ejs");
 	app.use(express.static(__dirname + "/public"));
@@ -18,116 +22,184 @@ var bodyParser     = require("body-parser"),
 	});
 
 	app.get("/blocks", function(req, res){
-		var todaysHeight=0;
-	
 
 		request.get('https://api.blockcypher.com/v1/btc/main', function (error, response, body){
 			console.log('error:', error); // Print the error if one occurred 
   			console.log('statusCode:', response && response.statusCode); // Print the response status code if a response was received 
   			var ht = JSON.parse(body);
-  			todaysHeight = parseInt(ht.height);
-  			console.log(todaysHeight);
-  		
-		var ds    = [];
-		var de    = [];
-		var dates = req.query.datefilter;
+  			var todaysHeight = parseInt(ht.height);
 
-		for(let i = 0; i<3; ++i){
-			let a = dates.split("-")[i];
-			ds.push(a);
-			console.log(ds);
-		}
+			var ds    = [];
+			var de    = [];
+			var dates = req.query.datefilter;
+
+			for(let i = 0; i<3; ++i){
+				let a = dates.split("-")[i];
+				ds.push(a);
+			}
+			
+			for(let j = 3; j<6; ++j){
+				let b = dates.split("-")[j];
+				de.push(b);
+			} 
+			
+			var bitcoinStartDate = "2009-01-03";
+			var dateStart = ds.join("-");
+			var dateEnd = de.join("-");
 		
-		for(let j = 3; j<6; ++j){
-			let b = dates.split("-")[j];
-			de.push(b);
-			console.log(de);
-		} 
-		
-		var bitcoinStartDate = "2009-01-03";
-		var dateStart = ds.join("-");
-		var dateEnd = de.join("-");
-		var today = "2017-07-20";
-		console.log(dateEnd);
+	        var diff1= dateMath.diff(new Date(bitcoinStartDate), new Date(dateStart), 'day');
+	        var diff2= dateMath.diff(new Date(dateStart), new Date(dateEnd), 'day');
+	        var blockStart = (diff1*152);
+	        var blockEnd = (diff1*152)+(diff2*152);
+	        var block = {blockStart, blockEnd, todaysHeight};
 
+	        console.log(blockStart);
+	        console.log(blockEnd);
 
-        var diff1= dateMath.diff(new Date(bitcoinStartDate), new Date(dateStart), 'day');
-        console.log(diff1);
-
-        var diff2= dateMath.diff(new Date(dateStart), new Date(dateEnd), 'day');
-        console.log(diff2);
-
-        var blockStart = (diff1*152);
-        var blockEnd = (diff1*152)+(diff2*152);
-
-        var block = {blockStart, blockEnd, todaysHeight};
-
-        console.log(blockStart);
-        console.log(blockEnd);
-
-        res.render("blocks", {block:block});	
-	}); });
+	        res.render("blocks", {block:block});	
+		}); 
+	});
 
 	app.get("/results", function(req, res){
 		var query = req.query.address;
 		var after = req.query.bStart;
 		var before = req.query.bEnd;
-
+		
+		var authUrl;
+		var code = '1234';
 		var bitcoin_address  = "1DEP8i3QJCsomS4BSMY2RpU1upv62aGvhD";
-		var txn_hash         = "b357ef869a27affd4442e57367396dc404b5757da117d8903ef196fd021b57bc"; 
-		var API_KEY          = "AIzaSyDwhdFAW_f1VHg5YXkTYWGD1rhNleI_w1w"; //google api key.
 		var SheetID          = "1oBT2mAVAcgYZxcmyquWaXRJOJ44AfKNgVlBHUeYcCWM"; // googlesheet id
-		var clientId	     = "376499115622-6ehsujrfbpo2jgmkr0j9o1i689qkhso9.apps.googleusercontent.com";
-		var clientSecret    = "2qQSz49seGmE7ApEAufN9w1D";
-		var values = {
-  						"auth":"AIzaSyDwhdFAW_f1VHg5YXkTYWGD1rhNleI_w1w",
-  						"range": "Sheet1!A1:D1",
-  						"majorDimension": "ROWS",
-  						"values": [
-   						["Item", "Cost", "Stocked", "Ship Date"],
-    					["Wheel", "$20.50", "4", "3/1/2016"],
-    					["Door", "$15", "2", "3/15/2016"],
-    					["Engine", "$100", "1", "30/20/2016"],
-    					["Totals", "=SUM(B2:B4)", "=SUM(C2:C4)", "=MAX(D2:D4)"]
-  						],
-  						
-					};
 
-		var auth = new googleAuth();
-  		var oauth2Client = new auth.OAuth2(clientId, clientSecret);
+		request.get('https://api.blockcypher.com/v1/btc/main/addrs/'+query+'/full?before='+before+'&after='+after, function (error, response, bodys) {
+  			console.log('error:', error); // Print the error if one occurred 
+  			console.log('statusCode blockcypher:', response && response.statusCode); // Print the response status code if a response was received 
+  			var result = JSON.parse(bodys);
+			//var fees = result.txs[0].fees;
+			//var txnDate = result.txs[0].confirmed;
+			//res.send(result);
+			//console.log(fees);
+			//console.log(txnDate);
+		});
 
 		
-		request.get('https://api.blockcypher.com/v1/btc/main/addrs/'+query+'/full?before='+before+'&after='+after, function (error, response, body) {
-  			console.log('error:', error); // Print the error if one occurred 
-  			console.log('statusCode:', response && response.statusCode); // Print the response status code if a response was received 
-  			var result = JSON.parse(body);
-			//res.send(result); // tx 0 hash "136c395e49c64eebe07d4fd540bc31a331c0a608a3afa9d35702ee8d55afe920"
 
-		//request.post('https://sheets.googleapis.com/v4/spreadsheets/'+SheetID+'/'+values+'/'+range+'&includeValuesInResponse=false&insertDataOption=INSERT_ROWS&responseDateTimeRenderOption=SERIAL_NUMBER&responseValueRenderOption=FORMATTED_VALUE&valueInputOption=USER_ENTERED&key='+API_KEY, function (error, response, body) {
-		request.post('https://sheets.googleapis.com/v4/spreadsheets/1oBT2mAVAcgYZxcmyquWaXRJOJ44AfKNgVlBHUeYcCWM/values/Sheet1!A1:D1:append?valueInputOption=RAW'+values, function (error, response, body) {
-  			console.log('error:', error); // Print the error if one occurred 
-  			console.log('statusCode:', response && response.statusCode); // Print the response status code if a response was received 
-  			
-  			//var result = JSON.parse(body);
-			//res.send(body); // tx 0 hash "136c395e49c64eebe07d4fd540bc31a331c0a608a3afa9d35702ee8d55afe920"
+					var projectDirectory = "D:/Projects/Bitcoin_Txn"; 
+					var SCOPES = ['https://www.googleapis.com/auth/spreadsheets'];
+					var TOKEN_DIR = 'D:/Projects/Bitcoin_Txn/credentials/';
+					var TOKEN_PATH = TOKEN_DIR + 'sheets.googleapis.com-nodejs-client_secret.json';
+
+					// Load client secrets from a local file.
+					fs.readFile('client_secret.json', function processClientSecrets(err, content) {
+					  if (err) {
+					    console.log('Error loading client secret file: ' + err);
+					    return;
+					  }
+					  // Authorize a client with the loaded credentials, then call the
+					  // Google Sheets API.
+					  authorize(JSON.parse(content), listMajors);
+					});
+
+					function authorize(credentials, callback) {
+					  var clientSecret = credentials.web.client_secret;
+					  var clientId = credentials.web.client_id;
+					  var redirectUrl = credentials.web.redirect_uris[0];
+					  var auth = new googleAuth();
+					  var oauth2Client = new auth.OAuth2(clientId, clientSecret, redirectUrl);
+
+					  // Check if we have previously stored a token.
+					  fs.readFile(TOKEN_PATH, function(err, token) {
+					    if (err) {
+					      getNewToken(oauth2Client, callback);
+					    } else {
+					      oauth2Client.credentials = JSON.parse(token);
+					      callback(oauth2Client);
+					    }
+					  });
+					}
+
+					function getNewToken(oauth2Client, callback) {
+					  		authUrl = oauth2Client.generateAuthUrl({
+					    	access_type: 'offline',
+					    	scope: SCOPES
 
 
-		}); 
-	});
+					  	});
 
-		//request('https://min-api.cryptocompare.com/data/pricehistorical?fsym=BTC&tsyms=USD,EUR&ts=1452680400&extraParams=your_app_name') price chart
-		//AIzaSyBq8pdBvq3A0E8ANDFFZg54bdZWcV7qz4Q //google api key.
+					  	
+					  	//request.get(authUrl, function (error, response, body) {
+							//var code = JSON.parse(response);
+							//console.log(response);
+							//var sPageURL = window.location.search.substring(1);
+						//});
+
+						console.log(authUrl);
+						console.log(code);
+
+					    oauth2Client.getToken(code, function(err, token) {
+					      if (err) {
+					        console.log('Error while trying to retrieve access token', err);
+					        return;
+					      } else {
+					      		oauth2Client.setCredentials(token);
+
+					    //   		oauth2Client.setCredentials({
+  							// 	access_token: 'ACCESS TOKEN HERE',
+  							// 	refresh_token: 'REFRESH TOKEN HERE'
+  							// 	// Optional, provide an expiry_date (milliseconds since the Unix Epoch)
+ 								// // expiry_date: (new Date()).getTime() + (1000 * 60 * 60 * 24 * 7)
+					      }
+					      //oauth2Client.credentials = token;
+					      storeToken(token);
+					      callback(oauth2Client);
+					    });
+					
+					}
+					
+					function storeToken(token) {
+					  try {
+					    fs.mkdirSync(TOKEN_DIR);
+					  } catch (err) {
+					    if (err.code != 'EEXIST') {
+					      throw err;
+					    }
+					  }
+					  fs.writeFile(TOKEN_PATH, JSON.stringify(token));
+					  console.log('Token stored to ' + TOKEN_PATH);
+					}
+
+					function listMajors(auth) {
+
+					var values = [
+  							[
+    							2123, 66666  // Cell values ...
+  							],
+  									// Additional rows ...
+					];
+					
+					var body = {
+  									values: values
+								};
 		
+					  sheets.spreadsheets.values.append({auth: auth, spreadsheetId:"1oBT2mAVAcgYZxcmyquWaXRJOJ44AfKNgVlBHUeYcCWM", range:"Sheet1!A1:D1", valueInputOption:"RAW", insertDataOption:"INSERT_ROWS", resource:body}, function(err, response) {
+					    if (err) {
+					      console.log('The API returned an error: ' + err);
+					      return;  
+					    } else {
+					    	console.log('statusCode Google sheets:', response && response.statusCode);
+					    }
+					  });
+					}
+	
 		// Basic Usage: 
 		cc.priceHistorical('BTC', ['USD', 'EUR'], new Date('2017-07-01')) //run in foreach in middleware
 			.then(prices => {
-  		console.log(prices)
-  		// -> { BTC: { USD: 997, EUR: 948.17 } } 
+  		//console.log(prices)
+  		 //-> { BTC: { USD: 997, EUR: 948.17 } } 
 		})
 		.catch(console.error)
 
-
-	});
+	res.render("results");
+});
 
 
 var port = process.env.PORT || 4000;
@@ -136,4 +208,3 @@ app.listen(port, function(){
 	console.log("Bitcoin txn getter Open on 4000");
 });
 
-// <input type="file" accept="image/*;capture=camera">
