@@ -1,5 +1,20 @@
 <% include ./partials/header %>
-<h1>Hello Results page</h1>
+<div style="text-align:center">
+<h1>Results page</h1>
+<h2><%=status%></h2>
+<h3><%=message%></h3>
+<a href="/" class="btn btn-success">Back to Query page</a>
+</div>
+<!-- <script>
+  var status = "<%=status%>";
+  var message = "<%=message%>";
+  if (status =="success"){
 
-<input type="text" name="code" value="">
+		alert("Add data to Google Spread sheet Success! Check your sheet");
+	}
+	else if (status=="fail"){
+		var message = "<%=message%>";
+		alert("Add data to Google Spread sheet Failed!" + message);
+	}
+</script> -->
 <% include ./partials/footer %>
